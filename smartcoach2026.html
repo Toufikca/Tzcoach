@@ -1,0 +1,3884 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Coach de Football - Analyse Professionnelle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ml-regression@5.0.0/dist/ml-regression.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1e3a5f;
+            --secondary-color: #2ecc71;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+            --background-color: #f5f7fa;
+            --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --light-text-color: #7f8c8d;
+            --border-color: #ecf0f1;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #16213e 100%);
+            color: #fff;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-card, .card {
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin: 30px auto;
+            max-width: 600px;
+        }
+
+        .card {
+            max-width: none;
+            padding: 30px;
+        }
+
+        .form-card h2, .card h2, .card h3 {
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+        }
+
+        .btn {
+            background-color: var(--secondary-color);
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            box-shadow: 0 2px 8px rgba(149, 165, 166, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+            box-shadow: 0 4px 12px rgba(149, 165, 166, 0.4);
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            width: auto;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .link-text {
+            color: var(--secondary-color);
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .link-text:hover {
+            color: #27ae60;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .dashboard-grid .card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .dashboard-grid .card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .dashboard-grid .card h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-grid .card p {
+            color: var(--light-text-color);
+            font-size: 0.95em;
+        }
+
+        .dashboard-grid .card i {
+            font-size: 2.5em;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+
+        .player-list {
+            margin-top: 20px;
+        }
+
+        .player-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .player-item {
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--secondary-color);
+            transition: all 0.3s ease;
+        }
+
+        .player-item:hover {
+            background-color: #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-name {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .player-details {
+            font-size: 0.9em;
+            color: var(--light-text-color);
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .player-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: var(--secondary-color);
+            transition: color 0.3s ease;
+            padding: 5px 10px;
+        }
+
+        .player-actions button:hover {
+            color: var(--primary-color);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 30px 0;
+        }
+
+        .radar-chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            margin: 30px auto;
+        }
+
+        .tab-menu {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-menu button {
+            background: none;
+            border: 2px solid var(--border-color);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            color: var(--light-text-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab-menu button.active {
+            background-color: var(--secondary-color);
+            color: #fff;
+            border-color: var(--secondary-color);
+        }
+
+        .tab-menu button:hover {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: var(--card-background);
+        }
+
+        .attendance-table th,
+        .attendance-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .attendance-table th {
+            background-color: var(--primary-color);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .attendance-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .attendance-table select {
+            padding: 6px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #27ae60;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border-color: #e74c3c;
+            color: #721c24;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #3498db;
+            color: #0c5460;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #27ae60 100%);
+            color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card h4 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .comparison-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .comparison-controls select {
+            flex: 1;
+            min-width: 150px;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .comparison-controls button {
+            width: auto;
+            padding: 10px 20px;
+            margin: 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: var(--light-text-color);
+        }
+
+        .close-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .rating-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .rating-input label {
+            flex: 1;
+            margin: 0;
+        }
+
+        .rating-input input[type="range"] {
+            width: 150px;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .rating-input input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+        }
+
+        .rating-input input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            border: none;
+        }
+
+        .rating-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .info-section {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .info-section h4 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .info-section ul {
+            margin-left: 20px;
+        }
+
+        .info-section li {
+            margin-bottom: 8px;
+            color: var(--text-color);
+        }
+
+        .training-plan-card {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .training-plan-card h4 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .training-plan-card p {
+            margin: 8px 0;
+            color: var(--text-color);
+        }
+
+        .strength-weakness-item {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .strength {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .weakness {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background-color: rgba(39, 174, 96, 0.2);
+            color: var(--success-color);
+        }
+
+        .badge-warning {
+            background-color: rgba(243, 156, 18, 0.2);
+            color: var(--warning-color);
+        }
+
+        .attendance-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+
+        .status-medium {
+            background-color: rgba(241, 196, 15, 0.2);
+            color: #f39c12;
+        }
+
+        .status-inactive {
+            background-color: rgba(149, 165, 166, 0.2);
+            color: #7f8c8d;
+        }
+
+        .status-injured {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .status-late {
+            background-color: rgba(230, 126, 34, 0.2);
+            color: #e67e22;
+        }
+
+        .status-absent {
+            background-color: rgba(52, 73, 94, 0.2);
+            color: #34495e;
+        }
+
+        .training-day {
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .training-day-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+        }
+
+        .training-day-content {
+            padding: 15px;
+            background-color: white;
+        }
+
+        .training-session {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .training-session:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .training-session h5 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .training-session p {
+            margin-bottom: 5px;
+        }
+
+        .training-focus {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .focus-technical {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+
+        .focus-physical {
+            background-color: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+
+        .focus-tactical {
+            background-color: rgba(155, 89, 182, 0.2);
+            color: #9b59b6;
+        }
+
+        .focus-mental {
+            background-color: rgba(241, 196, 15, 0.2);
+            color: #f39c12;
+        }
+
+        /* Styles pour le calendrier annuel */
+        .calendar-container {
+            margin: 20px 0;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: var(--border-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .calendar-day-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .calendar-day {
+            background-color: white;
+            min-height: 120px;
+            padding: 8px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            background-color: #f5f7fa;
+        }
+
+        .calendar-day.empty {
+            background-color: #f9f9f9;
+        }
+
+        .calendar-date {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .calendar-event {
+            font-size: 0.75em;
+            padding: 2px 5px;
+            margin-bottom: 2px;
+            border-radius: 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .event-training {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+            border-left: 3px solid #27ae60;
+        }
+
+        .event-match {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border-left: 3px solid #e74c3c;
+        }
+
+        .event-recovery {
+            background-color: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            border-left: 3px solid #3498db;
+        }
+
+        .calendar-legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+
+        .legend-training {
+            background-color: rgba(46, 204, 113, 0.2);
+            border-left: 3px solid #27ae60;
+        }
+
+        .legend-match {
+            background-color: rgba(231, 76, 60, 0.2);
+            border-left: 3px solid #e74c3c;
+        }
+
+        .legend-recovery {
+            background-color: rgba(52, 152, 219, 0.2);
+            border-left: 3px solid #3498db;
+        }
+
+        /* Styles pour l'analyse de données améliorée */
+        .chart-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .chart-type-btn {
+            background: none;
+            border: 2px solid var(--border-color);
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: var(--light-text-color);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .chart-type-btn.active {
+            background-color: var(--secondary-color);
+            color: #fff;
+            border-color: var(--secondary-color);
+        }
+
+        .chart-type-btn:hover {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        .adversary-comparison-form {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .comparison-divider {
+            text-align: center;
+            padding-top: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .form-card, .card {
+                padding: 20px;
+                margin: 20px auto;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container,
+            .radar-chart-container {
+                height: 300px;
+            }
+
+            .comparison-controls {
+                flex-direction: column;
+            }
+
+            .comparison-controls select,
+            .comparison-controls button {
+                width: 100%;
+            }
+
+            .tab-menu {
+                flex-direction: column;
+            }
+
+            .tab-menu button {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .calendar-day {
+                min-height: 80px;
+                font-size: 0.8em;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-divider {
+                padding: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-futbol"></i> Application Coach de Football</h1>
+        <p>Plateforme Professionnelle d'Analyse et de Gestion d'Équipes Sportives</p>
+    </header>
+
+    <div class="container">
+        <!-- Page d'Accueil -->
+        <div id="homePage" class="page active">
+            <div class="form-card text-center">
+                <h2>Bienvenue dans l'Application Coach</h2>
+                <p style="font-size: 1.1em; color: var(--light-text-color); margin: 20px 0;">
+                    Gérez votre équipe, analysez les performances et développez des programmes d'entraînement professionnels avec l'aide de l'intelligence artificielle.
+                </p>
+                <div style="margin-top: 30px;">
+                    <button class="btn" onclick="showPage('loginPage')" style="margin-bottom: 10px;">
+                        <i class="fas fa-sign-in-alt"></i> Se Connecter
+                    </button>
+                    <button class="btn btn-primary" onclick="showPage('registerPage')">
+                        <i class="fas fa-user-plus"></i> Créer un Compte
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page de Connexion -->
+        <div id="loginPage" class="page">
+            <div class="form-card">
+                <h2><i class="fas fa-sign-in-alt"></i> Connexion</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Adresse E-mail</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Mot de Passe</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn">Se Connecter</button>
+                    <div id="login-message" class="alert" style="display:none; margin-top: 15px;"></div>
+                    <p class="text-center" style="margin-top: 20px;">
+                        Pas de compte ? <span class="link-text" onclick="showPage('registerPage')">Créer un compte</span>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Page d'Inscription -->
+        <div id="registerPage" class="page">
+            <div class="form-card">
+                <h2><i class="fas fa-user-plus"></i> Créer un Compte</h2>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="regName">Nom Complet</label>
+                        <input type="text" id="regName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regEmail">Adresse E-mail</label>
+                        <input type="email" id="regEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">Mot de Passe</label>
+                        <input type="password" id="regPassword" required>
+                    </div>
+                    <button type="submit" class="btn">Créer un Compte</button>
+                    <div id="register-message" class="alert" style="display:none; margin-top: 15px;"></div>
+                    <p class="text-center" style="margin-top: 20px;">
+                        Déjà un compte ? <span class="link-text" onclick="showPage('loginPage')">Se connecter</span>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tableau de Bord Principal -->
+        <div id="dashboardPage" class="page">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 style="color: var(--primary-color); margin: 0;">Tableau de Bord</h2>
+                <button class="btn btn-secondary btn-small" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Nombre de Joueurs</h4>
+                    <div class="value" id="playerCount">0</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, var(--accent-color) 0%, #2980b9 100%);">
+                    <h4>Séances Prévues</h4>
+                    <div class="value" id="sessionCount">0</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, var(--warning-color) 0%, #e67e22 100%);">
+                    <h4>Taux de Présence</h4>
+                    <div class="value" id="attendanceRate">0%</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">
+                    <h4>Performance Moyenne</h4>
+                    <div class="value" id="avgPerformance">0/20</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card" onclick="showPage('injuryPage')">
+                    <i class="fas fa-medkit"></i>
+                    <h3>Gestion des Blessures</h3>
+                    <p>Suivi et analyse des blessures des joueurs.</p>
+                </div>
+                <div class="card" onclick="showPage('playerListPage')">
+                    <i class="fas fa-users"></i>
+                    <h3>Gestion des Joueurs</h3>
+                    <p>Ajouter, modifier et gérer les profils des joueurs</p>
+                </div>
+                <div class="card" onclick="showPage('playerEvaluationPage')">
+                    <i class="fas fa-chart-radar"></i>
+                    <h3>Évaluation des Joueurs</h3>
+                    <p>Évaluer les compétences techniques, physiques, tactiques et mentales</p>
+                </div>
+                <div class="card" onclick="showPage('trainingSchedulePage')">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>Planification d'Entraînement</h3>
+                    <p>Créer et gérer les plannings d'entraînement</p>
+                </div>
+                <div class="card" onclick="showPage('attendancePage')">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>Suivi des Présences</h3>
+                    <p>Enregistrer les présences et absences</p>
+                </div>
+                <div class="card" onclick="showPage('analysisPage')">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>Analyse de Données</h3>
+                    <p>Analyser les performances et générer des rapports</p>
+                </div>
+                <div class="card" onclick="showPage('adversaryPage')">
+                    <i class="fas fa-chess"></i>
+                    <h3>Analyse des Adversaires</h3>
+                    <p>Évaluer les forces et faiblesses des adversaires</p>
+                </div>
+                <div class="card" onclick="showPage('trainingProgramPage')">
+                    <i class="fas fa-dumbbell"></i>
+                    <h3>Programmes d'Entraînement</h3>
+                    <p>Générer des programmes basés sur l'analyse IA</p>
+                </div>
+                <div class="card" onclick="showPage('annualCalendarPage')">
+                    <i class="fas fa-calendar"></i>
+                    <h3>Calendrier Annuel</h3>
+                    <p>Planning complet de la saison avec entraînements et matchs</p>
+                </div>
+                <div class="card" onclick="showPage('infoGuidePage')">
+                    <i class="fas fa-book"></i>
+                    <h3>Guide d'Information</h3>
+                    <p>Conseils et objectifs par catégorie d'âge</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gestion des Joueurs -->
+        <div id="playerListPage" class="page">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: var(--primary-color); margin: 0;">Gestion des Joueurs</h2>
+                <button class="btn btn-small" onclick="showAddPlayerModal()">
+                    <i class="fas fa-plus"></i> Ajouter un Joueur
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="player-list">
+                    <ul id="playersList"></ul>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+
+        <!-- Évaluation des Joueurs -->
+        <div id="playerEvaluationPage" class="page">
+            <h2 style="color: var(--primary-color); text-align: center;">Évaluation des Joueurs</h2>
+
+            <div class="card">
+                <div class="form-group">
+                    <label for="evaluationPlayerSelect">Sélectionner un Joueur</label>
+                    <select id="evaluationPlayerSelect" onchange="loadPlayerEvaluation()">
+                        <option value="">-- Choisir un joueur --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="evaluationForm" style="display: none;">
+                <div class="card">
+                    <h3>Compétences Techniques</h3>
+                    <div class="rating-input">
+                        <label>Passes</label>
+                        <input type="range" id="passing" min="1" max="20" value="10">
+                        <span class="rating-value" id="passingValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Tirs</label>
+                        <input type="range" id="shooting" min="1" max="20" value="10">
+                        <span class="rating-value" id="shootingValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Dribbles</label>
+                        <input type="range" id="dribbling" min="1" max="20" value="10">
+                        <span class="rating-value" id="dribblingValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Contrôle du Ballon</label>
+                        <input type="range" id="ballControl" min="1" max="20" value="10">
+                        <span class="rating-value" id="ballControlValue">10</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Compétences Physiques</h3>
+                    <div class="rating-input">
+                        <label>Vitesse</label>
+                        <input type="range" id="speed" min="1" max="20" value="10">
+                        <span class="rating-value" id="speedValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Force</label>
+                        <input type="range" id="strength" min="1" max="20" value="10">
+                        <span class="rating-value" id="strengthValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Endurance</label>
+                        <input type="range" id="endurance" min="1" max="20" value="10">
+                        <span class="rating-value" id="enduranceValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Agilité</label>
+                        <input type="range" id="agility" min="1" max="20" value="10">
+                        <span class="rating-value" id="agilityValue">10</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Compétences Tactiques</h3>
+                    <div class="rating-input">
+                        <label>Positionnement</label>
+                        <input type="range" id="positioning" min="1" max="20" value="10">
+                        <span class="rating-value" id="positioningValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Prise de Décision</label>
+                        <input type="range" id="decisionMaking" min="1" max="20" value="10">
+                        <span class="rating-value" id="decisionMakingValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Travail d'Équipe</label>
+                        <input type="range" id="teamwork" min="1" max="20" value="10">
+                        <span class="rating-value" id="teamworkValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Vision du Jeu</label>
+                        <input type="range" id="vision" min="1" max="20" value="10">
+                        <span class="rating-value" id="visionValue">10</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Compétences Mentales</h3>
+                    <div class="rating-input">
+                        <label>Concentration</label>
+                        <input type="range" id="concentration" min="1" max="20" value="10">
+                        <span class="rating-value" id="concentrationValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Confiance</label>
+                        <input type="range" id="confidence" min="1" max="20" value="10">
+                        <span class="rating-value" id="confidenceValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Sang-Froid</label>
+                        <input type="range" id="composure" min="1" max="20" value="10">
+                        <span class="rating-value" id="composureValue">10</span>
+                    </div>
+                    <div class="rating-input">
+                        <label>Engagement</label>
+                        <input type="range" id="workRate" min="1" max="20" value="10">
+                        <span class="rating-value" id="workRateValue">10</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <button class="btn" onclick="savePlayerEvaluation()">
+                        <i class="fas fa-save"></i> Enregistrer l'Évaluation
+                    </button>
+                    <button class="btn btn-primary" onclick="showPlayerRadarChart()" style="margin-top: 10px;">
+                        <i class="fas fa-chart-radar"></i> Afficher le Graphique Radar
+                    </button>
+                </div>
+            </div>
+
+            <div id="radarChartContainer" style="display: none;">
+                <div class="card">
+                    <div class="radar-chart-container">
+                        <canvas id="playerRadarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+
+        <!-- Planification d'Entraînement -->
+        <div id="trainingSchedulePage" class="page">
+            <h2 style="color: var(--primary-color); text-align: center;">Planification d'Entraînement</h2>
+
+            <div class="card">
+                <h3>Créer une Nouvelle Séance</h3>
+                <form id="trainingScheduleForm">
+                    <div class="form-group">
+                        <label for="trainingDate">Date</label>
+                        <input type="date" id="trainingDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="trainingTime">Heure</label>
+                        <input type="time" id="trainingTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="trainingDuration">Durée (minutes)</label>
+                        <input type="number" id="trainingDuration" min="30" max="180" value="90" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="trainingType">Type d'Entraînement</label>
+                        <select id="trainingType" required>
+                            <option value="">-- Choisir un type --</option>
+                            <option value="technique">Technique</option>
+                            <option value="physique">Physique</option>
+                            <option value="tactique">Tactique</option>
+                            <option value="mental">Mental</option>
+                            <option value="mixte">Mixte</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="trainingDescription">Description</label>
+                        <textarea id="trainingDescription" rows="4" placeholder="Décrivez les objectifs et activités de la séance..."></textarea>
+                    </div>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-plus"></i> Ajouter une Séance
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Séances Programmées</h3>
+                <div id="trainingScheduleList"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+
+        <!-- Suivi des Présences -->
+        <div id="attendancePage" class="page">
+            <h2 style="color: var(--primary-color); text-align: center;">Suivi des Présences</h2>
+
+            <div class="card">
+                <div class="form-group">
+                    <label for="attendanceDate">Sélectionner une Date</label>
+                    <input type="date" id="attendanceDate" onchange="loadAttendanceTable()">
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Statistiques de Présence</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Joueurs Actifs</h4>
+                        <div class="value" id="activeCount">0</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, var(--warning-color) 0%, #e67e22 100%);">
+                        <h4>Joueurs Moyens</h4>
+                        <div class="value" id="mediumCount">0</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);">
+                        <h4>Joueurs Inactifs</h4>
+                        <div class="value" id="inactiveCount">0</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, var(--danger-color) 0%, #c0392b 100%);">
+                        <h4>Joueurs Blessés</h4>
+                        <div class="value" id="injuredCount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Liste des Joueurs</h3>
+                <table class="attendance-table" id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th>Joueur</th>
+                            <th>Position</th>
+                            <th>Statut</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody">
+                    </tbody>
+                </table>
+                <button class="btn" onclick="saveAttendance()" style="margin-top: 20px;">
+                    <i class="fas fa-save"></i> Enregistrer les Présences
+                </button>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+
+        <!-- Gestion des Blessures -->
+        <div id="injuryPage" class="page">
+            <h2 style="color: var(--primary-color); text-align: center;">Gestion des Blessures et Récupération</h2>
+
+            <div class="card">
+                <h3>Ajouter une Nouvelle Blessure</h3>
+                <form id="addInjuryForm">
+                    <div class="form-group">
+                        <label for="injuryPlayerSelect">Joueur</label>
+                        <select id="injuryPlayerSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="injuryType">Type de Blessure</label>
+                        <input type="text" id="injuryType" placeholder="Ex: Entorse de la cheville" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="injuryDate">Date de la Blessure</label>
+                        <input type="date" id="injuryDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="injurySeverity">Gravité (1-5)</label>
+                        <input type="number" id="injurySeverity" min="1" max="5" value="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="injuryExpectedReturn">Retour Prévu</label>
+                        <input type="date" id="injuryExpectedReturn">
+                    </div>
+                    <div class="form-group">
+                        <label for="injuryNotes">Notes de Traitement/Récupération</label>
+                        <textarea id="injuryNotes" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-medkit"></i> Enregistrer la Blessure
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Historique des Blessures</h3>
+                <div id="injuryList">
+                    <p class="text-center">Aucune blessure enregistrée.</p>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+
+        <!-- Analyse de Données (AMÉLIORÉE) -->
+        <div id="analysisPage" class="page">
+            <h2 style="color: var(--primary-color); text-align: center;">Analyse de Données</h2>
+
+            <div class="card">
+                <h3>Sélection du Type de Graphique</h3>
+                <div class="chart-type-selector">
+                    <button class="chart-type-btn active" onclick="switchChartType('bar')">
+                        <i class="fas fa-chart-bar"></i> Histogramme
+                    </button>
+                    <button class="chart-type-btn" onclick="switchChartType('radar')">
+                        <i class="fas fa-chart-radar"></i> Radar
+                    </button>
+                    <button class="chart-type-btn" onclick="switchChartType('pie')">
+                        <i class="fas fa-chart-pie"></i> Circulaire
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Comparaison Joueur contre Joueur</h3>
+                <div class="comparison-controls">
+                    <select id="playerSelect1" onchange="updateComparisonChart()">
+                        <option value="">-- Joueur 1 --</option>
+                    </select>
+                    <select id="playerSelect2" onchange="updateComparisonChart()">
+                        <option value="">-- Joueur 2 --</option>
+                    </select>
+                    <button class="btn btn-small" onclick="generateAnalysisReport()">
+                        <i class="fas fa-file-pdf"></i> Rapport PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Comparaison Joueur contre Adversaire</h3>
+                <div class="adversary-comparison-form">
+                    <div class="comparison-grid">
+                        <div>
+                            <div class="form-group">
+                                <label for="playerForComparison">Sélectionner un Joueur</label>
+                                <select id="playerForComparison">
+                                    <option value="">-- Choisir un joueur --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="comparison-divider">VS</div>
+                        <div>
+                            <div class="form-group">
+                                <label for="adversaryNameForComparison">Nom de l'Adversaire</label>
+                                <input type="text" id="adversaryNameForComparison" placeholder="Nom de l'adversaire">
+                            </div>
+                            <div class="form-group">
+                                <label for="adversaryAttributes">Attributs de l'Adversaire (séparés par des virgules)</label>
+                                <input type="text" id="adversaryAttributes" placeholder="Ex: 15,12,18,14,16,13,17,15">
+                                <small style="color: var(--light-text-color);">Ordre: Passes, Tirs, Dribbles, Contrôle, Vitesse, Force, Endurance, Agilité</small>
+                            </div>
+                            <button class="btn btn-small" onclick="comparePlayerVsAdversary()">
+                                <i class="fas fa-balance-scale"></i> Comparer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Statistiques Globales de l'Équipe</h3>
+                <div class="chart-container">
+                    <canvas id="teamStatsChart"></canvas>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+
+        <!-- Analyse des Adversaires -->
+        <div id="adversaryPage" class="page">
+            <h2 style="color: var(--primary-color); text-align: center;">Analyse des Adversaires</h2>
+
+            <div class="card">
+                <h3>Ajouter un Adversaire</h3>
+                <form id="adversaryForm">
+                    <div class="form-group">
+                        <label for="adversaryName">Nom de l'Équipe</label>
+                        <input type="text" id="adversaryName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adversaryStrengths">Forces</label>
+                        <textarea id="adversaryStrengths" rows="3" placeholder="Listez les forces de l'équipe..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="adversaryWeaknesses">Faiblesses</label>
+                        <textarea id="adversaryWeaknesses" rows="3" placeholder="Listez les faiblesses de l'équipe..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="adversaryFormation">Formation Habituelle</label>
+                        <input type="text" id="adversaryFormation" placeholder="Ex: 4-3-3">
+                    </div>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-plus"></i> Ajouter l'Adversaire
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Adversaires Enregistrés</h3>
+                <div id="adversaryList"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+
+        <!-- Programmes d'Entraînement IA -->
+        <div id="trainingProgramPage" class="page">
+            <h2 style="color: var(--primary-color); text-align: center;">Programmes d'Entraînement Générés par IA</h2>
+
+            <div class="card">
+                <h3>Configuration du Programme</h3>
+                <div class="form-group">
+                    <label for="programMatchDate">Date du Match</label>
+                    <input type="date" id="programMatchDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="programAdversarySelect">Adversaire (Optionnel)</label>
+                    <select id="programAdversarySelect">
+                        <option value="">-- Aucun adversaire sélectionné --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="teamObjectives">Objectifs de l'Équipe</label>
+                    <textarea id="teamObjectives" rows="3" placeholder="Décrivez les objectifs principaux de l'équipe pour ce match..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="coachFocus">Focus de l'Entraîneur</label>
+                    <select id="coachFocus">
+                        <option value="balanced">Équilibre (défense/attaque)</option>
+                        <option value="offensive">Jeu Offensif</option>
+                        <option value="defensive">Jeu Défensif</option>
+                        <option value="possession">Possession de balle</option>
+                        <option value="counter">Contre-attaque</option>
+                        <option value="pressing">Pressing haut</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="generateAITrainingProgram()">
+                    <i class="fas fa-robot"></i> Générer le Programme d'Entraînement
+                </button>
+            </div>
+
+            <div id="aiProgramContainer" style="display: none;">
+                <div class="card">
+                    <h3>Programme d'Entraînement Hebdomadaire</h3>
+                    <div id="aiProgramContent"></div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+
+        <!-- Calendrier Annuel (NOUVEAU) -->
+        <div id="annualCalendarPage" class="page">
+            <h2 style="color: var(--primary-color); text-align: center;">Calendrier Annuel d'Entraînement et de Matchs</h2>
+
+            <div class="card">
+                <h3>Configuration de la Saison</h3>
+                <div class="form-group">
+                    <label for="seasonStartDate">Date de Début de Saison</label>
+                    <input type="date" id="seasonStartDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="seasonEndDate">Date de Fin de Saison</label>
+                    <input type="date" id="seasonEndDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="trainingDays">Jours d'Entraînement par Semaine</label>
+                    <select id="trainingDays" required>
+                        <option value="4" selected>4 jours</option>
+                        <option value="3">3 jours</option>
+                        <option value="5">5 jours</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="matchDay">Jour de Match Hebdomadaire</label>
+                    <select id="matchDay" required>
+                        <option value="6">Samedi</option>
+                        <option value="0">Dimanche</option>
+                        <option value="1">Lundi</option>
+                        <option value="2">Mardi</option>
+                        <option value="3">Mercredi</option>
+                        <option value="4">Jeudi</option>
+                        <option value="5">Vendredi</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="generateAnnualCalendar()">
+                    <i class="fas fa-calendar-plus"></i> Générer le Calendrier
+                </button>
+            </div>
+
+            <div id="calendarContainer" style="display: none;">
+                <div class="card">
+                    <div class="calendar-header">
+                        <h3 id="calendarMonthYear">Mois Année</h3>
+                        <div>
+                            <button class="btn btn-small" onclick="changeCalendarMonth(-1)">
+                                <i class="fas fa-chevron-left"></i> Mois Précédent
+                            </button>
+                            <button class="btn btn-small" onclick="changeCalendarMonth(1)" style="margin-left: 10px;">
+                                Mois Suivant <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-container">
+                        <div class="calendar-grid" id="calendarGrid">
+                            <!-- Le calendrier sera généré ici -->
+                        </div>
+                    </div>
+
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <div class="legend-color legend-training"></div>
+                            <span>Entraînement</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-match"></div>
+                            <span>Match</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-recovery"></div>
+                            <span>Récupération</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Événements du Calendrier</h3>
+                    <div id="calendarEventsList"></div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+
+        <!-- Guide d'Information -->
+        <div id="infoGuidePage" class="page">
+            <h2 style="color: var(--primary-color); text-align: center;">Guide d'Information par Catégorie d'Âge</h2>
+
+            <div class="card">
+                <div class="tab-menu">
+                    <button class="tab-btn active" onclick="switchInfoTab('u16')">Moins de 16 ans</button>
+                    <button class="tab-btn" onclick="switchInfoTab('u18')">Moins de 18 ans</button>
+                    <button class="tab-btn" onclick="switchInfoTab('u20')">Moins de 20 ans</button>
+                    <button class="tab-btn" onclick="switchInfoTab('senior')">Sénior</button>
+                    <button class="tab-btn" onclick="switchInfoTab('women')">Équipe Féminine</button>
+                </div>
+
+                <div id="u16-tab" class="tab-content active">
+                    <h3>Catégorie Moins de 16 ans</h3>
+                    <div class="info-section">
+                        <h4>Aspect Technique</h4>
+                        <p><strong>Caractéristiques :</strong> Développement des fondamentaux, apprentissage des techniques de base.</p>
+                        <p><strong>Conseils :</strong> Exercices techniques variés, jeux de possession, amélioration de la coordination.</p>
+                        <p><strong>Objectifs :</strong> Maîtriser les passes, les tirs et le contrôle du ballon.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Physique</h4>
+                        <p><strong>Caractéristiques :</strong> Croissance rapide, développement musculaire initial.</p>
+                        <p><strong>Conseils :</strong> Exercices de flexibilité, renforcement progressif, jeux ludiques.</p>
+                        <p><strong>Objectifs :</strong> Développer la vitesse et l'agilité, améliorer l'endurance.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Tactique</h4>
+                        <p><strong>Caractéristiques :</strong> Compréhension basique du jeu, apprentissage des positions.</p>
+                        <p><strong>Conseils :</strong> Jeux tactiques simples, apprentissage des rôles, travail en équipe.</p>
+                        <p><strong>Objectifs :</strong> Comprendre les positions, développer l'intelligence tactique.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Mental</h4>
+                        <p><strong>Caractéristiques :</strong> Développement de la confiance, apprentissage de la discipline.</p>
+                        <p><strong>Conseils :</strong> Renforcement positif, défis progressifs, développement du leadership.</p>
+                        <p><strong>Objectifs :</strong> Construire la confiance, développer la mentalité de gagnant.</p>
+                    </div>
+                </div>
+
+                <div id="u18-tab" class="tab-content">
+                    <h3>Catégorie Moins de 18 ans</h3>
+                    <div class="info-section">
+                        <h4>Aspect Technique</h4>
+                        <p><strong>Caractéristiques :</strong> Perfectionnement des techniques, développement des compétences spécialisées.</p>
+                        <p><strong>Conseils :</strong> Exercices techniques avancés, travail sur les points faibles, spécialisation.</p>
+                        <p><strong>Objectifs :</strong> Maîtriser les techniques avancées, développer un style personnel.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Physique</h4>
+                        <p><strong>Caractéristiques :</strong> Croissance complète, développement musculaire avancé.</p>
+                        <p><strong>Conseils :</strong> Programmes de force, travail de vitesse, amélioration de l'endurance.</p>
+                        <p><strong>Objectifs :</strong> Atteindre le pic de performance physique, développer la puissance.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Tactique</h4>
+                        <p><strong>Caractéristiques :</strong> Compréhension avancée du jeu, apprentissage des stratégies.</p>
+                        <p><strong>Conseils :</strong> Jeux tactiques complexes, analyse de vidéos, apprentissage des systèmes.</p>
+                        <p><strong>Objectifs :</strong> Maîtriser les systèmes tactiques, développer la vision du jeu.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Mental</h4>
+                        <p><strong>Caractéristiques :</strong> Maturité mentale croissante, développement de la responsabilité.</p>
+                        <p><strong>Conseils :</strong> Défis importants, développement du leadership, gestion du stress.</p>
+                        <p><strong>Objectifs :</strong> Développer la mentalité professionnelle, construire la résilience.</p>
+                    </div>
+                </div>
+
+                <div id="u20-tab" class="tab-content">
+                    <h3>Catégorie Moins de 20 ans</h3>
+                    <div class="info-section">
+                        <h4>Aspect Technique</h4>
+                        <p><strong>Caractéristiques :</strong> Maîtrise complète des techniques, développement de la créativité.</p>
+                        <p><strong>Conseils :</strong> Exercices techniques complexes, travail sur l'efficacité, développement de la créativité.</p>
+                        <p><strong>Objectifs :</strong> Maîtriser tous les systèmes, développer l'intelligence tactique.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Physique</h4>
+                        <p><strong>Caractéristiques :</strong> Pic de performance physique, force et vitesse maximales.</p>
+                        <p><strong>Conseils :</strong> Programmes de maintien, prévention des blessures, optimisation de la performance.</p>
+                        <p><strong>Objectifs :</strong> Maintenir le pic de performance, améliorer la capacité athlétique.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Tactique</h4>
+                        <p><strong>Caractéristiques :</strong> Maîtrise complète des systèmes, compréhension profonde du jeu.</p>
+                        <p><strong>Conseils :</strong> Jeux tactiques avancés, analyse approfondie, apprentissage des innovations.</p>
+                        <p><strong>Objectifs :</strong> Maîtriser tous les systèmes, développer l'intelligence tactique.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Mental</h4>
+                        <p><strong>Caractéristiques :</strong> Maturité mentale complète, développement du leadership.</p>
+                        <p><strong>Conseils :</strong> Défis avancés, développement du leadership, gestion de la pression.</p>
+                        <p><strong>Objectifs :</strong> Construire une forte personnalité, développer la confiance absolue.</p>
+                    </div>
+                </div>
+
+                <div id="senior-tab" class="tab-content">
+                    <h3>Catégorie Sénior</h3>
+                    <div class="info-section">
+                        <h4>Aspect Technique</h4>
+                        <p><strong>Caractéristiques :</strong> Maîtrise complète, expérience et intelligence du jeu.</p>
+                        <p><strong>Conseils :</strong> Perfectionnement continu, partage d'expérience, mentorat.</p>
+                        <p><strong>Objectifs :</strong> Maintenir la maîtrise, transmettre les connaissances.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Physique</h4>
+                        <p><strong>Caractéristiques :</strong> Déclin progressif, nécessité de maintien spécifique.</p>
+                        <p><strong>Conseils :</strong> Programmes de maintien, prévention des blessures, récupération active.</p>
+                        <p><strong>Objectifs :</strong> Maintenir la performance, prévenir les blessures.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Tactique</h4>
+                        <p><strong>Caractéristiques :</strong> Expérience et compréhension profonde du jeu.</p>
+                        <p><strong>Conseils :</strong> Utilisation de l'expérience, leadership tactique, mentorat.</p>
+                        <p><strong>Objectifs :</strong> Utiliser l'expérience, développer le leadership.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Mental</h4>
+                        <p><strong>Caractéristiques :</strong> Maturité mentale complète, expérience et sagesse.</p>
+                        <p><strong>Conseils :</strong> Leadership, mentorat, partage d'expérience.</p>
+                        <p><strong>Objectifs :</strong> Développer le leadership, transmettre les connaissances.</p>
+                    </div>
+                </div>
+
+                <div id="women-tab" class="tab-content">
+                    <h3>Équipe Féminine</h3>
+                    <div class="info-section">
+                        <h4>Aspect Technique</h4>
+                        <p><strong>Caractéristiques :</strong> Grande attention aux détails, précision dans l'exécution.</p>
+                        <p><strong>Conseils :</strong> Se concentrer sur la précision, exercices techniques variés.</p>
+                        <p><strong>Objectifs :</strong> Maîtriser les compétences de base, améliorer les performances collectives.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Physique</h4>
+                        <p><strong>Caractéristiques :</strong> Différences physiologiques, accent sur la souplesse et l'agilité.</p>
+                        <p><strong>Conseils :</strong> Programmes conçus pour les femmes, exercices de force fonctionnelle.</p>
+                        <p><strong>Objectifs :</strong> Construire une force équilibrée, améliorer l'agilité.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Tactique</h4>
+                        <p><strong>Caractéristiques :</strong> Grande intelligence tactique, compréhension approfondie des plans.</p>
+                        <p><strong>Conseils :</strong> Jeux tactiques complexes, analyse vidéo, développement stratégique.</p>
+                        <p><strong>Objectifs :</strong> Maîtriser les systèmes tactiques, développer la vision du jeu.</p>
+                    </div>
+                    <div class="info-section">
+                        <h4>Aspect Mental</h4>
+                        <p><strong>Caractéristiques :</strong> Maturité mentale, développement du leadership féminin.</p>
+                        <p><strong>Conseils :</strong> Défis importants, développement de la confiance, leadership inclusif.</p>
+                        <p><strong>Objectifs :</strong> Construire la confiance, développer le leadership féminin.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="showPage('dashboardPage')">
+                    <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour Ajouter un Joueur -->
+    <div id="addPlayerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ajouter un Joueur</h2>
+                <button class="close-btn" onclick="closeAddPlayerModal()">&times;</button>
+            </div>
+            <form id="addPlayerForm">
+                <div class="form-group">
+                    <label for="playerName">Nom</label>
+                    <input type="text" id="playerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="playerAge">Âge</label>
+                    <input type="number" id="playerAge" min="10" max="50" required>
+                </div>
+                <div class="form-group">
+                    <label for="playerHeight">Taille (cm)</label>
+                    <input type="number" id="playerHeight" min="150" max="210" required>
+                </div>
+                <div class="form-group">
+                    <label for="playerWeight">Poids (kg)</label>
+                    <input type="number" id="playerWeight" min="40" max="120" required>
+                </div>
+                <div class="form-group">
+                    <label for="playerPosition">Position</label>
+                    <select id="playerPosition" required>
+                        <option value="">-- Choisir une position --</option>
+                        <option value="Gardien">Gardien</option>
+                        <option value="Défenseur">Défenseur</option>
+                        <option value="Milieu">Milieu</option>
+                        <option value="Attaquant">Attaquant</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Ajouter le Joueur</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ============ ÉTAT DE L'APPLICATION ============
+        const appState = {
+            currentUser: null,
+            users: {},
+            currentProfile: null,
+            profiles: {},
+            players: {},
+            evaluations: {},
+            trainingSchedules: [],
+            attendance: {},
+            adversaries: {},
+            injuries: {},
+            charts: {},
+            annualCalendar: {
+                seasonStart: null,
+                seasonEnd: null,
+                trainingDaysPerWeek: 4,
+                matchDay: 6, // 0=dimanche, 1=lundi, ..., 6=samedi
+                events: {}
+            },
+            currentChartType: 'bar'
+        };
+
+        // ============ INITIALISATION ============
+        function initializeApp() {
+            loadDataFromLocalStorage();
+            setupEventListeners();
+            updateDashboardStats();
+            displayPlayersList();
+            populatePlayerSelect('evaluationPlayerSelect');
+            populatePlayerSelect('programPlayerSelect');
+            populateAdversarySelect('programAdversarySelect');
+            populatePlayerSelect('playerSelect1');
+            populatePlayerSelect('playerSelect2');
+            populatePlayerSelect('playerForComparison');
+            displayAdversaries();
+            initializeInjuryPage();
+
+            // Gestion des pages
+            if (appState.currentUser) {
+                showPage("dashboardPage");
+            } else {
+                showPage("loginPage");
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+            document.getElementById('addPlayerForm').addEventListener('submit', handleAddPlayer);
+            document.getElementById('addInjuryForm').addEventListener('submit', handleAddInjury);
+            document.getElementById('trainingScheduleForm').addEventListener('submit', handleAddTrainingSession);
+            document.getElementById('adversaryForm').addEventListener('submit', handleAddAdversary);
+
+            // Mise à jour des valeurs d'évaluation en temps réel
+            const ratingInputs = document.querySelectorAll('.rating-input input[type="range"]');
+            ratingInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const valueSpan = this.parentElement.querySelector('.rating-value');
+                    if (valueSpan) {
+                        valueSpan.textContent = this.value;
+                    }
+                });
+            });
+        }
+
+        // ============ GESTION DE L'AUTHENTIFICATION ============
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (appState.users[email] && appState.users[email].password === password) {
+                appState.currentUser = email;
+                saveDataToLocalStorage();
+                appState.currentProfile = Object.keys(appState.users[email].profiles || {})[0];
+                showPage('dashboardPage');
+                updateDashboardStats();
+                clearLoginForm();
+            } else {
+                showMessage('login-message', 'Identifiants incorrects', 'error');
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            if (appState.users[email]) {
+                showMessage('register-message', 'Cet email est déjà utilisé', 'error');
+                return;
+            }
+
+            appState.users[email] = {
+                name: name,
+                password: password,
+                profiles: {}
+            };
+
+            saveDataToLocalStorage();
+            showMessage("register-message", "Compte créé avec succès! Veuillez vous connecter.", "success");
+            setTimeout(() => {
+                showPage('loginPage');
+                clearRegisterForm();
+            }, 2000);
+        }
+
+        function logout() {
+            appState.currentUser = null;
+            appState.currentProfile = null;
+            saveDataToLocalStorage();
+            showPage('homePage');
+        }
+
+        function clearLoginForm() {
+            document.getElementById('loginForm').reset();
+            document.getElementById('login-message').style.display = 'none';
+        }
+
+        function clearRegisterForm() {
+            document.getElementById('registerForm').reset();
+            document.getElementById('register-message').style.display = 'none';
+        }
+
+        // ============ GESTION DES PAGES ============
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+
+            if (pageId === 'playerEvaluationPage') {
+                populatePlayerSelect('evaluationPlayerSelect');
+            } else if (pageId === 'trainingProgramPage') {
+                populatePlayerSelect('programPlayerSelect');
+                populateAdversarySelect('programAdversarySelect');
+            } else if (pageId === 'analysisPage') {
+                populatePlayerSelect('playerSelect1');
+                populatePlayerSelect('playerSelect2');
+                populatePlayerSelect('playerForComparison');
+                updateTeamStatsChart();
+            } else if (pageId === 'attendancePage') {
+                loadAttendanceTable();
+            } else if (pageId === 'annualCalendarPage') {
+                initializeCalendarPage();
+            }
+        }
+
+        // ============ GESTION DES JOUEURS ============
+        function showAddPlayerModal() {
+            document.getElementById('addPlayerModal').classList.add('active');
+        }
+
+        function closeAddPlayerModal() {
+            document.getElementById('addPlayerModal').classList.remove('active');
+            document.getElementById('addPlayerForm').reset();
+        }
+
+        function handleAddPlayer(e) {
+            e.preventDefault();
+            const name = document.getElementById('playerName').value;
+            const age = parseInt(document.getElementById('playerAge').value);
+            const height = parseInt(document.getElementById('playerHeight').value);
+            const weight = parseInt(document.getElementById('playerWeight').value);
+            const position = document.getElementById('playerPosition').value;
+
+            if (!appState.currentUser) return;
+
+            const user = appState.users[appState.currentUser];
+            if (!user.profiles) user.profiles = {};
+            if (!appState.currentProfile) appState.currentProfile = 'Profil Principal';
+
+            if (!user.profiles[appState.currentProfile]) {
+                user.profiles[appState.currentProfile] = { players: {} };
+            }
+
+            const playerId = `player_${Date.now()}`;
+            user.profiles[appState.currentProfile].players[playerId] = {
+                id: playerId,
+                name: name,
+                age: age,
+                height: height,
+                weight: weight,
+                position: position,
+                ratings: {
+                    technical: { passing: 10, shooting: 10, dribbling: 10, ballControl: 10 },
+                    physical: { speed: 10, strength: 10, endurance: 10, agility: 10 },
+                    tactical: { positioning: 10, decisionMaking: 10, teamwork: 10, vision: 10 },
+                    mental: { concentration: 10, confidence: 10, composure: 10, workRate: 10 }
+                }
+            };
+
+            saveDataToLocalStorage();
+            displayPlayersList();
+            closeAddPlayerModal();
+            showMessage('', 'Joueur ajouté avec succès!', 'success');
+            updateDashboardStats();
+        }
+
+        function displayPlayersList() {
+            const playersList = document.getElementById('playersList');
+            playersList.innerHTML = '';
+
+            if (!appState.currentUser) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            if (!profile || !profile.players) return;
+
+            Object.values(profile.players).forEach(player => {
+                const li = document.createElement('li');
+                li.className = 'player-item';
+                li.innerHTML = `
+                    <div class="player-info">
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-details">${player.position} | ${player.age} ans | ${player.height}cm | ${player.weight}kg</div>
+                    </div>
+                    <div class="player-actions">
+                        <button onclick="editPlayer('${player.id}')" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deletePlayer('${player.id}')" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                playersList.appendChild(li);
+            });
+        }
+
+        function deletePlayer(playerId) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce joueur?')) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            delete profile.players[playerId];
+
+            saveDataToLocalStorage();
+            displayPlayersList();
+            updateDashboardStats();
+        }
+
+        function editPlayer(playerId) {
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            const player = profile.players[playerId];
+
+            document.getElementById('playerName').value = player.name;
+            document.getElementById('playerAge').value = player.age;
+            document.getElementById('playerHeight').value = player.height;
+            document.getElementById('playerWeight').value = player.weight;
+            document.getElementById('playerPosition').value = player.position;
+
+            deletePlayer(playerId);
+            showAddPlayerModal();
+        }
+
+        function populateAdversarySelect(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">-- Aucun adversaire sélectionné --</option>';
+
+            Object.values(appState.adversaries).forEach(adversary => {
+                const option = document.createElement('option');
+                option.value = adversary.id;
+                option.textContent = adversary.name;
+                select.appendChild(option);
+            });
+        }
+
+        function populatePlayerSelect(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">-- Choisir un joueur --</option>';
+
+            if (!appState.currentUser) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            if (!profile || !profile.players) return;
+
+            Object.values(profile.players).forEach(player => {
+                const option = document.createElement('option');
+                option.value = player.id;
+                option.textContent = player.name;
+                select.appendChild(option);
+            });
+        }
+
+        // ============ ÉVALUATION DES JOUEURS ============
+        function loadPlayerEvaluation() {
+            const playerId = document.getElementById('evaluationPlayerSelect').value;
+            if (!playerId) {
+                document.getElementById('evaluationForm').style.display = 'none';
+                return;
+            }
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            const player = profile.players[playerId];
+
+            if (player.ratings) {
+                document.getElementById('passing').value = player.ratings.technical.passing;
+                document.getElementById('passingValue').textContent = player.ratings.technical.passing;
+                document.getElementById('shooting').value = player.ratings.technical.shooting;
+                document.getElementById('shootingValue').textContent = player.ratings.technical.shooting;
+                document.getElementById('dribbling').value = player.ratings.technical.dribbling;
+                document.getElementById('dribblingValue').textContent = player.ratings.technical.dribbling;
+                document.getElementById('ballControl').value = player.ratings.technical.ballControl;
+                document.getElementById('ballControlValue').textContent = player.ratings.technical.ballControl;
+
+                document.getElementById('speed').value = player.ratings.physical.speed;
+                document.getElementById('speedValue').textContent = player.ratings.physical.speed;
+                document.getElementById('strength').value = player.ratings.physical.strength;
+                document.getElementById('strengthValue').textContent = player.ratings.physical.strength;
+                document.getElementById('endurance').value = player.ratings.physical.endurance;
+                document.getElementById('enduranceValue').textContent = player.ratings.physical.endurance;
+                document.getElementById('agility').value = player.ratings.physical.agility;
+                document.getElementById('agilityValue').textContent = player.ratings.physical.agility;
+
+                document.getElementById('positioning').value = player.ratings.tactical.positioning;
+                document.getElementById('positioningValue').textContent = player.ratings.tactical.positioning;
+                document.getElementById('decisionMaking').value = player.ratings.tactical.decisionMaking;
+                document.getElementById('decisionMakingValue').textContent = player.ratings.tactical.decisionMaking;
+                document.getElementById('teamwork').value = player.ratings.tactical.teamwork;
+                document.getElementById('teamworkValue').textContent = player.ratings.tactical.teamwork;
+                document.getElementById('vision').value = player.ratings.tactical.vision;
+                document.getElementById('visionValue').textContent = player.ratings.tactical.vision;
+
+                document.getElementById('concentration').value = player.ratings.mental.concentration;
+                document.getElementById('concentrationValue').textContent = player.ratings.mental.concentration;
+                document.getElementById('confidence').value = player.ratings.mental.confidence;
+                document.getElementById('confidenceValue').textContent = player.ratings.mental.confidence;
+                document.getElementById('composure').value = player.ratings.mental.composure;
+                document.getElementById('composureValue').textContent = player.ratings.mental.composure;
+                document.getElementById('workRate').value = player.ratings.mental.workRate;
+                document.getElementById('workRateValue').textContent = player.ratings.mental.workRate;
+            }
+
+            document.getElementById('evaluationForm').style.display = 'block';
+        }
+
+        function savePlayerEvaluation() {
+            const playerId = document.getElementById('evaluationPlayerSelect').value;
+            if (!playerId) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            const player = profile.players[playerId];
+
+            player.ratings = {
+                technical: {
+                    passing: parseInt(document.getElementById('passing').value),
+                    shooting: parseInt(document.getElementById('shooting').value),
+                    dribbling: parseInt(document.getElementById('dribbling').value),
+                    ballControl: parseInt(document.getElementById('ballControl').value)
+                },
+                physical: {
+                    speed: parseInt(document.getElementById('speed').value),
+                    strength: parseInt(document.getElementById('strength').value),
+                    endurance: parseInt(document.getElementById('endurance').value),
+                    agility: parseInt(document.getElementById('agility').value)
+                },
+                tactical: {
+                    positioning: parseInt(document.getElementById('positioning').value),
+                    decisionMaking: parseInt(document.getElementById('decisionMaking').value),
+                    teamwork: parseInt(document.getElementById('teamwork').value),
+                    vision: parseInt(document.getElementById('vision').value)
+                },
+                mental: {
+                    concentration: parseInt(document.getElementById('concentration').value),
+                    confidence: parseInt(document.getElementById('confidence').value),
+                    composure: parseInt(document.getElementById('composure').value),
+                    workRate: parseInt(document.getElementById('workRate').value)
+                }
+            };
+
+            saveDataToLocalStorage();
+            showMessage('', 'Évaluation enregistrée avec succès!', 'success');
+            updateDashboardStats();
+        }
+
+        function showPlayerRadarChart() {
+            const playerId = document.getElementById('evaluationPlayerSelect').value;
+            if (!playerId) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            const player = profile.players[playerId];
+
+            document.getElementById('radarChartContainer').style.display = 'block';
+
+            const ctx = document.getElementById('playerRadarChart').getContext('2d');
+            
+            const labels = [
+                'Passes', 'Tirs', 'Dribbles', 'Contrôle',
+                'Vitesse', 'Force', 'Endurance', 'Agilité',
+                'Positionnement', 'Décision', 'Équipe', 'Vision',
+                'Concentration', 'Confiance', 'Sang-Froid', 'Engagement'
+            ];
+
+            const data = [
+                player.ratings.technical.passing,
+                player.ratings.technical.shooting,
+                player.ratings.technical.dribbling,
+                player.ratings.technical.ballControl,
+                player.ratings.physical.speed,
+                player.ratings.physical.strength,
+                player.ratings.physical.endurance,
+                player.ratings.physical.agility,
+                player.ratings.tactical.positioning,
+                player.ratings.tactical.decisionMaking,
+                player.ratings.tactical.teamwork,
+                player.ratings.tactical.vision,
+                player.ratings.mental.concentration,
+                player.ratings.mental.confidence,
+                player.ratings.mental.composure,
+                player.ratings.mental.workRate
+            ];
+
+            if (appState.charts.playerRadarChart) {
+                appState.charts.playerRadarChart.destroy();
+            }
+
+            appState.charts.playerRadarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: player.name,
+                        data: data,
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#2ecc71'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 20,
+                            ticks: {
+                                stepSize: 5
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: `Profil de Performance - ${player.name}`
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============ PLANIFICATION D'ENTRAÎNEMENT ============
+        function handleAddTrainingSession(e) {
+            e.preventDefault();
+            const date = document.getElementById('trainingDate').value;
+            const time = document.getElementById('trainingTime').value;
+            const duration = parseInt(document.getElementById('trainingDuration').value);
+            const type = document.getElementById('trainingType').value;
+            const description = document.getElementById('trainingDescription').value;
+
+            const session = {
+                id: `session_${Date.now()}`,
+                date: date,
+                time: time,
+                duration: duration,
+                type: type,
+                description: description
+            };
+
+            appState.trainingSchedules.push(session);
+            saveDataToLocalStorage();
+            displayTrainingSchedules();
+            document.getElementById('trainingScheduleForm').reset();
+            showMessage('', 'Séance d\'entraînement ajoutée avec succès!', 'success');
+            updateDashboardStats();
+        }
+
+        function displayTrainingSchedules() {
+            const list = document.getElementById('trainingScheduleList');
+            list.innerHTML = '';
+
+            appState.trainingSchedules.forEach(session => {
+                const div = document.createElement('div');
+                div.className = 'training-plan-card';
+                div.innerHTML = `
+                    <h4>${session.date} à ${session.time}</h4>
+                    <p><strong>Type :</strong> ${session.type}</p>
+                    <p><strong>Durée :</strong> ${session.duration} minutes</p>
+                    <p><strong>Description :</strong> ${session.description}</p>
+                    <button class="btn btn-danger btn-small" onclick="deleteTrainingSession('${session.id}')" style="margin-top: 10px;">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function deleteTrainingSession(sessionId) {
+            appState.trainingSchedules = appState.trainingSchedules.filter(s => s.id !== sessionId);
+            saveDataToLocalStorage();
+            displayTrainingSchedules();
+            updateDashboardStats();
+        }
+
+        // ============ SUIVI DES PRÉSENCES ============
+        function loadAttendanceTable() {
+            const date = document.getElementById('attendanceDate').value;
+            if (!date) return;
+
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+
+            if (!appState.currentUser) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            if (!profile || !profile.players) return;
+
+            // Compteurs pour les statistiques
+            let activeCount = 0;
+            let mediumCount = 0;
+            let inactiveCount = 0;
+            let injuredCount = 0;
+            let lateCount = 0;
+            let absentCount = 0;
+
+            Object.values(profile.players).forEach(player => {
+                const attendanceData = appState.attendance[`${date}_${player.id}`] || { status: 'absent', notes: '' };
+                
+                // Mettre à jour les compteurs
+                switch(attendanceData.status) {
+                    case 'actif': activeCount++; break;
+                    case 'moyen': mediumCount++; break;
+                    case 'inactif': inactiveCount++; break;
+                    case 'blessé': injuredCount++; break;
+                    case 'en retard': lateCount++; break;
+                    case 'absent': absentCount++; break;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${player.name}</td>
+                    <td>${player.position}</td>
+                    <td>
+                        <select class="attendance-status-select" data-player-id="${player.id}" data-date="${date}">
+                            <option value="actif" ${attendanceData.status === 'actif' ? 'selected' : ''}>Actif</option>
+                            <option value="moyen" ${attendanceData.status === 'moyen' ? 'selected' : ''}>Moyen</option>
+                            <option value="inactif" ${attendanceData.status === 'inactif' ? 'selected' : ''}>Inactif</option>
+                            <option value="blessé" ${attendanceData.status === 'blessé' ? 'selected' : ''}>Blessé</option>
+                            <option value="en retard" ${attendanceData.status === 'en retard' ? 'selected' : ''}>En retard</option>
+                            <option value="absent" ${attendanceData.status === 'absent' ? 'selected' : ''}>Absent</option>
+                        </select>
+                        <span class="attendance-status status-${attendanceData.status}">${getStatusDisplayName(attendanceData.status)}</span>
+                    </td>
+                    <td>
+                        <textarea class="attendance-notes" data-player-id="${player.id}" data-date="${date}" placeholder="Notes..." style="width: 100%; height: 60px; padding: 5px;">${attendanceData.notes || ''}</textarea>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Mettre à jour les statistiques
+            document.getElementById('activeCount').textContent = activeCount;
+            document.getElementById('mediumCount').textContent = mediumCount;
+            document.getElementById('inactiveCount').textContent = inactiveCount;
+            document.getElementById('injuredCount').textContent = injuredCount;
+        }
+
+        function getStatusDisplayName(status) {
+            const statusNames = {
+                'actif': 'Actif',
+                'moyen': 'Moyen',
+                'inactif': 'Inactif',
+                'blessé': 'Blessé',
+                'en retard': 'En retard',
+                'absent': 'Absent'
+            };
+            return statusNames[status] || status;
+        }
+
+        function saveAttendance() {
+            const date = document.getElementById('attendanceDate').value;
+            if (!date) {
+                showMessage('', 'Veuillez sélectionner une date.', 'error');
+                return;
+            }
+
+            const statusSelects = document.querySelectorAll('.attendance-status-select');
+            const notesTextareas = document.querySelectorAll('.attendance-notes');
+
+            statusSelects.forEach(select => {
+                const playerId = select.dataset.playerId;
+                const status = select.value;
+                const notes = document.querySelector(`.attendance-notes[data-player-id="${playerId}"][data-date="${date}"]`).value;
+
+                appState.attendance[`${date}_${playerId}`] = {
+                    status: status,
+                    notes: notes
+                };
+            });
+
+            saveDataToLocalStorage();
+            loadAttendanceTable(); // Recharger pour mettre à jour les statistiques
+            showMessage('', 'Présences enregistrées avec succès!', 'success');
+            updateDashboardStats();
+        }
+
+        // ============ ANALYSE DE DONNÉES AMÉLIORÉE ============
+        function switchChartType(type) {
+            appState.currentChartType = type;
+            
+            // Mettre à jour les boutons actifs
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Mettre à jour les graphiques
+            updateComparisonChart();
+            updateTeamStatsChart();
+        }
+
+        function updateComparisonChart() {
+            const playerId1 = document.getElementById('playerSelect1').value;
+            const playerId2 = document.getElementById('playerSelect2').value;
+
+            if (!playerId1 || !playerId2) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            const player1 = profile.players[playerId1];
+            const player2 = profile.players[playerId2];
+
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            const labels = ['Passes', 'Tirs', 'Dribbles', 'Contrôle', 'Vitesse', 'Force', 'Endurance', 'Agilité', 'Positionnement', 'Décision', 'Équipe', 'Vision', 'Concentration', 'Confiance', 'Sang-Froid', 'Engagement'];
+
+            const data1 = [
+                player1.ratings.technical.passing,
+                player1.ratings.technical.shooting,
+                player1.ratings.technical.dribbling,
+                player1.ratings.technical.ballControl,
+                player1.ratings.physical.speed,
+                player1.ratings.physical.strength,
+                player1.ratings.physical.endurance,
+                player1.ratings.physical.agility,
+                player1.ratings.tactical.positioning,
+                player1.ratings.tactical.decisionMaking,
+                player1.ratings.tactical.teamwork,
+                player1.ratings.tactical.vision,
+                player1.ratings.mental.concentration,
+                player1.ratings.mental.confidence,
+                player1.ratings.mental.composure,
+                player1.ratings.mental.workRate
+            ];
+
+            const data2 = [
+                player2.ratings.technical.passing,
+                player2.ratings.technical.shooting,
+                player2.ratings.technical.dribbling,
+                player2.ratings.technical.ballControl,
+                player2.ratings.physical.speed,
+                player2.ratings.physical.strength,
+                player2.ratings.physical.endurance,
+                player2.ratings.physical.agility,
+                player2.ratings.tactical.positioning,
+                player2.ratings.tactical.decisionMaking,
+                player2.ratings.tactical.teamwork,
+                player2.ratings.tactical.vision,
+                player2.ratings.mental.concentration,
+                player2.ratings.mental.confidence,
+                player2.ratings.mental.composure,
+                player2.ratings.mental.workRate
+            ];
+
+            if (appState.charts.comparisonChart) {
+                appState.charts.comparisonChart.destroy();
+            }
+
+            let chartConfig;
+
+            switch(appState.currentChartType) {
+                case 'radar':
+                    chartConfig = {
+                        type: 'radar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: player1.name,
+                                    data: data1,
+                                    borderColor: '#2ecc71',
+                                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                                    borderWidth: 2
+                                },
+                                {
+                                    label: player2.name,
+                                    data: data2,
+                                    borderColor: '#3498db',
+                                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                                    borderWidth: 2
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    beginAtZero: true,
+                                    max: 20
+                                }
+                            }
+                        }
+                    };
+                    break;
+                case 'pie':
+                    // Pour les diagrammes circulaires, nous ne pouvons comparer qu'une seule catégorie à la fois
+                    // Nous utiliserons donc la première catégorie (technique) par défaut
+                    chartConfig = {
+                        type: 'pie',
+                        data: {
+                            labels: ['Passes', 'Tirs', 'Dribbles', 'Contrôle'],
+                            datasets: [
+                                {
+                                    label: `${player1.name} - Compétences Techniques`,
+                                    data: [
+                                        player1.ratings.technical.passing,
+                                        player1.ratings.technical.shooting,
+                                        player1.ratings.technical.dribbling,
+                                        player1.ratings.technical.ballControl
+                                    ],
+                                    backgroundColor: [
+                                        'rgba(46, 204, 113, 0.7)',
+                                        'rgba(52, 152, 219, 0.7)',
+                                        'rgba(155, 89, 182, 0.7)',
+                                        'rgba(241, 196, 15, 0.7)'
+                                    ]
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    };
+                    break;
+                case 'bar':
+                default:
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: player1.name,
+                                    data: data1,
+                                    backgroundColor: '#2ecc71',
+                                    borderColor: '#27ae60',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: player2.name,
+                                    data: data2,
+                                    backgroundColor: '#3498db',
+                                    borderColor: '#2980b9',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    max: 20
+                                }
+                            }
+                        }
+                    };
+            }
+
+            appState.charts.comparisonChart = new Chart(ctx, chartConfig);
+        }
+
+        function comparePlayerVsAdversary() {
+            const playerId = document.getElementById('playerForComparison').value;
+            const adversaryName = document.getElementById('adversaryNameForComparison').value;
+            const adversaryAttributes = document.getElementById('adversaryAttributes').value;
+
+            if (!playerId || !adversaryName || !adversaryAttributes) {
+                showMessage('', 'Veuillez remplir tous les champs.', 'error');
+                return;
+            }
+
+            // Parser les attributs de l'adversaire
+            const attributes = adversaryAttributes.split(',').map(attr => parseInt(attr.trim()));
+            
+            if (attributes.length !== 8) {
+                showMessage('', 'Veuillez fournir exactement 8 attributs séparés par des virgules.', 'error');
+                return;
+            }
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            const player = profile.players[playerId];
+
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            const labels = ['Passes', 'Tirs', 'Dribbles', 'Contrôle', 'Vitesse', 'Force', 'Endurance', 'Agilité'];
+
+            const playerData = [
+                player.ratings.technical.passing,
+                player.ratings.technical.shooting,
+                player.ratings.technical.dribbling,
+                player.ratings.technical.ballControl,
+                player.ratings.physical.speed,
+                player.ratings.physical.strength,
+                player.ratings.physical.endurance,
+                player.ratings.physical.agility
+            ];
+
+            if (appState.charts.comparisonChart) {
+                appState.charts.comparisonChart.destroy();
+            }
+
+            let chartConfig;
+
+            switch(appState.currentChartType) {
+                case 'radar':
+                    chartConfig = {
+                        type: 'radar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: player.name,
+                                    data: playerData,
+                                    borderColor: '#2ecc71',
+                                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                                    borderWidth: 2
+                                },
+                                {
+                                    label: adversaryName,
+                                    data: attributes,
+                                    borderColor: '#e74c3c',
+                                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                                    borderWidth: 2
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    beginAtZero: true,
+                                    max: 20
+                                }
+                            }
+                        }
+                    };
+                    break;
+                case 'pie':
+                    // Pour les diagrammes circulaires, nous ne pouvons comparer qu'une seule catégorie à la fois
+                    chartConfig = {
+                        type: 'pie',
+                        data: {
+                            labels: ['Passes', 'Tirs', 'Dribbles', 'Contrôle'],
+                            datasets: [
+                                {
+                                    label: `${player.name} - Compétences Techniques`,
+                                    data: [
+                                        player.ratings.technical.passing,
+                                        player.ratings.technical.shooting,
+                                        player.ratings.technical.dribbling,
+                                        player.ratings.technical.ballControl
+                                    ],
+                                    backgroundColor: [
+                                        'rgba(46, 204, 113, 0.7)',
+                                        'rgba(52, 152, 219, 0.7)',
+                                        'rgba(155, 89, 182, 0.7)',
+                                        'rgba(241, 196, 15, 0.7)'
+                                    ]
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    };
+                    break;
+                case 'bar':
+                default:
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: player.name,
+                                    data: playerData,
+                                    backgroundColor: '#2ecc71',
+                                    borderColor: '#27ae60',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: adversaryName,
+                                    data: attributes,
+                                    backgroundColor: '#e74c3c',
+                                    borderColor: '#c0392b',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    max: 20
+                                }
+                            }
+                        }
+                    };
+            }
+
+            appState.charts.comparisonChart = new Chart(ctx, chartConfig);
+        }
+
+        function updateTeamStatsChart() {
+            if (!appState.currentUser) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            if (!profile || !profile.players) return;
+
+            const players = Object.values(profile.players);
+            const avgTechnical = players.reduce((sum, p) => sum + (p.ratings.technical.passing + p.ratings.technical.shooting + p.ratings.technical.dribbling + p.ratings.technical.ballControl) / 4, 0) / players.length;
+            const avgPhysical = players.reduce((sum, p) => sum + (p.ratings.physical.speed + p.ratings.physical.strength + p.ratings.physical.endurance + p.ratings.physical.agility) / 4, 0) / players.length;
+            const avgTactical = players.reduce((sum, p) => sum + (p.ratings.tactical.positioning + p.ratings.tactical.decisionMaking + p.ratings.tactical.teamwork + p.ratings.tactical.vision) / 4, 0) / players.length;
+            const avgMental = players.reduce((sum, p) => sum + (p.ratings.mental.concentration + p.ratings.mental.confidence + p.ratings.mental.composure + p.ratings.mental.workRate) / 4, 0) / players.length;
+
+            const ctx = document.getElementById('teamStatsChart').getContext('2d');
+
+            if (appState.charts.teamStatsChart) {
+                appState.charts.teamStatsChart.destroy();
+            }
+
+            let chartConfig;
+
+            switch(appState.currentChartType) {
+                case 'radar':
+                    chartConfig = {
+                        type: 'radar',
+                        data: {
+                            labels: ['Technique', 'Physique', 'Tactique', 'Mental'],
+                            datasets: [{
+                                label: 'Performance Moyenne',
+                                data: [avgTechnical, avgPhysical, avgTactical, avgMental],
+                                borderColor: '#9b59b6',
+                                backgroundColor: 'rgba(155, 89, 182, 0.2)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    beginAtZero: true,
+                                    max: 20
+                                }
+                            }
+                        }
+                    };
+                    break;
+                case 'pie':
+                    chartConfig = {
+                        type: 'pie',
+                        data: {
+                            labels: ['Technique', 'Physique', 'Tactique', 'Mental'],
+                            datasets: [{
+                                data: [avgTechnical, avgPhysical, avgTactical, avgMental],
+                                backgroundColor: ['#2ecc71', '#3498db', '#f39c12', '#e74c3c'],
+                                borderColor: '#fff',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    };
+                    break;
+                case 'bar':
+                default:
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: ['Technique', 'Physique', 'Tactique', 'Mental'],
+                            datasets: [{
+                                label: 'Performance Moyenne',
+                                data: [avgTechnical, avgPhysical, avgTactical, avgMental],
+                                backgroundColor: ['#2ecc71', '#3498db', '#f39c12', '#e74c3c'],
+                                borderColor: ['#27ae60', '#2980b9', '#e67e22', '#c0392b'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 20
+                                }
+                            }
+                        }
+                    };
+            }
+
+            appState.charts.teamStatsChart = new Chart(ctx, chartConfig);
+        }
+
+        // ============ GESTION DES BLESSURES ============
+        function populateInjuryPlayerSelect() {
+            const select = document.getElementById('injuryPlayerSelect');
+            select.innerHTML = '<option value="">-- Choisir un joueur --</option>';
+
+            if (!appState.currentUser) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            if (!profile || !profile.players) return;
+
+            Object.values(profile.players).forEach(player => {
+                const option = document.createElement('option');
+                option.value = player.id;
+                option.textContent = player.name;
+                select.appendChild(option);
+            });
+        }
+
+        function handleAddInjury(e) {
+            e.preventDefault();
+            const playerId = document.getElementById('injuryPlayerSelect').value;
+            const type = document.getElementById('injuryType').value;
+            const date = document.getElementById('injuryDate').value;
+            const severity = parseInt(document.getElementById('injurySeverity').value);
+            const expectedReturn = document.getElementById('injuryExpectedReturn').value;
+            const notes = document.getElementById('injuryNotes').value;
+
+            if (!playerId) {
+                showMessage('', 'Veuillez sélectionner un joueur.', 'error');
+                return;
+            }
+
+            const injuryId = `injury_${Date.now()}`;
+            appState.injuries[injuryId] = {
+                id: injuryId,
+                playerId: playerId,
+                type: type,
+                date: date,
+                severity: severity,
+                expectedReturn: expectedReturn,
+                notes: notes,
+                isActive: true
+            };
+
+            saveDataToLocalStorage();
+            displayInjuries();
+            document.getElementById('addInjuryForm').reset();
+            showMessage('', 'Blessure enregistrée avec succès!', 'success');
+        }
+
+        function displayInjuries() {
+            const list = document.getElementById('injuryList');
+            list.innerHTML = '';
+
+            if (!appState.currentUser) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            if (!profile || !profile.players) return;
+
+            const players = profile.players;
+            const activeInjuries = Object.values(appState.injuries).filter(i => i.isActive);
+
+            if (activeInjuries.length === 0) {
+                list.innerHTML = '<p class="text-center">Aucune blessure active enregistrée.</p>';
+                return;
+            }
+
+            activeInjuries.forEach(injury => {
+                const playerName = players[injury.playerId] ? players[injury.playerId].name : 'Joueur Inconnu';
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.style.borderLeft = '5px solid var(--danger-color)';
+                div.innerHTML = `
+                    <h4>${playerName} - ${injury.type}</h4>
+                    <p><strong>Date de la blessure :</strong> ${injury.date}</p>
+                    <p><strong>Gravité :</strong> ${injury.severity}/5</p>
+                    <p><strong>Retour prévu :</strong> ${injury.expectedReturn || 'Non spécifié'}</p>
+                    <p><strong>Notes :</strong> ${injury.notes || 'Aucune'}</p>
+                    <button class="btn btn-secondary btn-small" onclick="markInjuryAsRecovered('${injury.id}')" style="margin-top: 10px;">
+                        <i class="fas fa-check"></i> Marquer comme Rétabli
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function markInjuryAsRecovered(injuryId) {
+            if (appState.injuries[injuryId]) {
+                appState.injuries[injuryId].isActive = false;
+                saveDataToLocalStorage();
+                displayInjuries();
+                showMessage('', 'Joueur marqué comme rétabli!', 'success');
+            }
+        }
+
+        // ============ ANALYSE DES ADVERSAIRES ============
+        function handleAddAdversary(e) {
+            e.preventDefault();
+            const name = document.getElementById('adversaryName').value;
+            const strengths = document.getElementById('adversaryStrengths').value;
+            const weaknesses = document.getElementById('adversaryWeaknesses').value;
+            const formation = document.getElementById('adversaryFormation').value;
+
+            const adversary = {
+                id: `adversary_${Date.now()}`,
+                name: name,
+                strengths: strengths,
+                weaknesses: weaknesses,
+                formation: formation
+            };
+
+            appState.adversaries[adversary.id] = adversary;
+            saveDataToLocalStorage();
+            displayAdversaries();
+            document.getElementById('adversaryForm').reset();
+            showMessage('', 'Adversaire ajouté avec succès!', 'success');
+        }
+
+        function displayAdversaries() {
+            const list = document.getElementById('adversaryList');
+            list.innerHTML = '';
+
+            Object.values(appState.adversaries).forEach(adversary => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <h4>${adversary.name}</h4>
+                    <div class="strength-weakness-item strength">
+                        <div>
+                            <strong>Forces :</strong>
+                            <p>${adversary.strengths}</p>
+                        </div>
+                    </div>
+                    <div class="strength-weakness-item weakness">
+                        <div>
+                            <strong>Faiblesses :</strong>
+                            <p>${adversary.weaknesses}</p>
+                        </div>
+                    </div>
+                    <p><strong>Formation :</strong> ${adversary.formation}</p>
+                    <button class="btn btn-danger btn-small" onclick="deleteAdversary('${adversary.id}')" style="margin-top: 10px;">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function deleteAdversary(adversaryId) {
+            delete appState.adversaries[adversaryId];
+            saveDataToLocalStorage();
+            displayAdversaries();
+        }
+
+        // ============ PROGRAMMES D'ENTRAÎNEMENT IA ============
+        function generateAITrainingProgram() {
+            const matchDate = document.getElementById('programMatchDate').value;
+            const adversaryId = document.getElementById('programAdversarySelect').value;
+            const teamObjectives = document.getElementById('teamObjectives').value;
+            const coachFocus = document.getElementById('coachFocus').value;
+
+            if (!matchDate) {
+                showMessage('', 'Veuillez sélectionner une date de match.', 'error');
+                return;
+            }
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            const players = Object.values(profile.players);
+            const adversary = appState.adversaries[adversaryId];
+
+            // Analyser les données de l'équipe
+            const teamAnalysis = analyzeTeamData(players);
+            
+            // Analyser les blessures
+            const injuryAnalysis = analyzeInjuries();
+            
+            // Analyser l'adversaire
+            const adversaryAnalysis = adversary ? analyzeAdversary(adversary) : null;
+            
+            // Générer le programme d'entraînement
+            const trainingProgram = createTrainingProgram(
+                teamAnalysis, 
+                injuryAnalysis, 
+                adversaryAnalysis, 
+                teamObjectives, 
+                coachFocus, 
+                matchDate
+            );
+
+            // Afficher le programme
+            displayTrainingProgram(trainingProgram, teamAnalysis, adversaryAnalysis);
+            document.getElementById('aiProgramContainer').style.display = 'block';
+        }
+
+        function analyzeTeamData(players) {
+            const analysis = {
+                strengths: [],
+                weaknesses: [],
+                avgRatings: {
+                    technical: 0,
+                    physical: 0,
+                    tactical: 0,
+                    mental: 0
+                },
+                playerCount: players.length,
+                availablePlayers: 0
+            };
+
+            let totalTechnical = 0, totalPhysical = 0, totalTactical = 0, totalMental = 0;
+
+            players.forEach(player => {
+                // Calculer les moyennes
+                const techAvg = (player.ratings.technical.passing + player.ratings.technical.shooting + 
+                               player.ratings.technical.dribbling + player.ratings.technical.ballControl) / 4;
+                const physAvg = (player.ratings.physical.speed + player.ratings.physical.strength + 
+                               player.ratings.physical.endurance + player.ratings.physical.agility) / 4;
+                const tactAvg = (player.ratings.tactical.positioning + player.ratings.tactical.decisionMaking + 
+                               player.ratings.tactical.teamwork + player.ratings.tactical.vision) / 4;
+                const mentAvg = (player.ratings.mental.concentration + player.ratings.mental.confidence + 
+                               player.ratings.mental.composure + player.ratings.mental.workRate) / 4;
+
+                totalTechnical += techAvg;
+                totalPhysical += physAvg;
+                totalTactical += tactAvg;
+                totalMental += mentAvg;
+
+                // Identifier les forces et faiblesses individuelles
+                Object.entries(player.ratings).forEach(([category, skills]) => {
+                    Object.entries(skills).forEach(([skill, value]) => {
+                        if (value >= 15) {
+                            analysis.strengths.push(`${player.name} - ${skill} (${category})`);
+                        } else if (value <= 8) {
+                            analysis.weaknesses.push(`${player.name} - ${skill} (${category})`);
+                        }
+                    });
+                });
+            });
+
+            // Calculer les moyennes globales
+            analysis.avgRatings.technical = totalTechnical / players.length;
+            analysis.avgRatings.physical = totalPhysical / players.length;
+            analysis.avgRatings.tactical = totalTactical / players.length;
+            analysis.avgRatings.mental = totalMental / players.length;
+
+            // Compter les joueurs disponibles (non blessés)
+            analysis.availablePlayers = players.length - Object.values(appState.injuries).filter(i => i.isActive).length;
+
+            return analysis;
+        }
+
+        function analyzeInjuries() {
+            const activeInjuries = Object.values(appState.injuries).filter(i => i.isActive);
+            return {
+                count: activeInjuries.length,
+                players: activeInjuries.map(i => i.playerId),
+                details: activeInjuries.map(i => ({
+                    playerId: i.playerId,
+                    type: i.type,
+                    severity: i.severity,
+                    expectedReturn: i.expectedReturn
+                }))
+            };
+        }
+
+        function analyzeAdversary(adversary) {
+            return {
+                name: adversary.name,
+                strengths: adversary.strengths.split('\n').filter(s => s.trim()),
+                weaknesses: adversary.weaknesses.split('\n').filter(s => s.trim()),
+                formation: adversary.formation
+            };
+        }
+
+        function createTrainingProgram(teamAnalysis, injuryAnalysis, adversaryAnalysis, teamObjectives, coachFocus, matchDate) {
+            const program = {
+                days: [],
+                focusAreas: [],
+                recommendations: []
+            };
+
+            // Déterminer les jours d'entraînement (généralement 5 jours avant le match)
+            const matchDateObj = new Date(matchDate);
+            const trainingDays = [];
+            
+            for (let i = 5; i >= 1; i--) {
+                const trainingDate = new Date(matchDateObj);
+                trainingDate.setDate(trainingDate.getDate() - i);
+                trainingDays.push(trainingDate.toISOString().split('T')[0]);
+            }
+
+            // Déterminer les domaines à améliorer en fonction de l'analyse
+            if (teamAnalysis.avgRatings.technical < 12) {
+                program.focusAreas.push('technique');
+            }
+            if (teamAnalysis.avgRatings.physical < 12) {
+                program.focusAreas.push('physique');
+            }
+            if (teamAnalysis.avgRatings.tactical < 12) {
+                program.focusAreas.push('tactique');
+            }
+            if (teamAnalysis.avgRatings.mental < 12) {
+                program.focusAreas.push('mental');
+            }
+
+            // Adapter en fonction de l'adversaire
+            if (adversaryAnalysis) {
+                if (adversaryAnalysis.strengths.some(s => s.toLowerCase().includes('attaque'))) {
+                    program.focusAreas.push('défense');
+                }
+                if (adversaryAnalysis.weaknesses.some(w => w.toLowerCase().includes('défense'))) {
+                    program.focusAreas.push('attaque');
+                }
+            }
+
+            // Adapter en fonction du focus de l'entraîneur
+            if (coachFocus === 'offensive') {
+                program.focusAreas.push('attaque', 'finition');
+            } else if (coachFocus === 'defensive') {
+                program.focusAreas.push('défense', 'organisation');
+            } else if (coachFocus === 'possession') {
+                program.focusAreas.push('passes', 'positionnement');
+            } else if (coachFocus === 'counter') {
+                program.focusAreas.push('transition', 'vitesse');
+            } else if (coachFocus === 'pressing') {
+                program.focusAreas.push('pressing', 'récupération');
+            }
+
+            // Créer le programme jour par jour
+            trainingDays.forEach((date, index) => {
+                const dayProgram = {
+                    date: date,
+                    sessions: []
+                };
+
+                // Jour 1 (5 jours avant le match) - Focus technique et physique
+                if (index === 0) {
+                    dayProgram.sessions.push({
+                        time: '10:00',
+                        duration: 90,
+                        type: 'Mixte',
+                        focus: ['technique', 'physique'],
+                        description: 'Échauffement complet, exercices techniques variés, renforcement physique léger'
+                    });
+                }
+                // Jour 2 - Focus tactique
+                else if (index === 1) {
+                    dayProgram.sessions.push({
+                        time: '10:00',
+                        duration: 105,
+                        type: 'Tactique',
+                        focus: ['tactique'],
+                        description: 'Travail sur le système de jeu, analyse vidéo de l\'adversaire, exercices tactiques'
+                    });
+                }
+                // Jour 3 - Focus spécifique en fonction des analyses
+                else if (index === 2) {
+                    const focus = program.focusAreas.slice(0, 2).join(', ');
+                    dayProgram.sessions.push({
+                        time: '10:00',
+                        duration: 90,
+                        type: 'Spécifique',
+                        focus: program.focusAreas.slice(0, 2),
+                        description: `Travail ciblé sur ${focus} basé sur l'analyse de l'équipe et de l'adversaire`
+                    });
+                }
+                // Jour 4 - Répétition et préparation mentale
+                else if (index === 3) {
+                    dayProgram.sessions.push({
+                        time: '10:00',
+                        duration: 75,
+                        type: 'Mental',
+                        focus: ['mental', 'tactique'],
+                        description: 'Préparation mentale, répétition des schémas offensifs et défensifs, jeu réduit'
+                    });
+                }
+                // Jour 5 - Veille du match
+                else if (index === 4) {
+                    dayProgram.sessions.push({
+                        time: '10:00',
+                        duration: 60,
+                        type: 'Léger',
+                        focus: ['technique', 'mental'],
+                        description: 'Échauffement léger, travail technique, préparation mentale, briefing final'
+                    });
+                }
+
+                program.days.push(dayProgram);
+            });
+
+            // Ajouter des recommandations spécifiques
+            if (injuryAnalysis.count > 0) {
+                program.recommendations.push(`Adapter les exercices pour ${injuryAnalysis.count} joueur(s) blessé(s)`);
+            }
+
+            if (teamAnalysis.weaknesses.length > 0) {
+                program.recommendations.push('Travailler spécifiquement sur les points faibles identifiés');
+            }
+
+            if (adversaryAnalysis) {
+                program.recommendations.push(`Préparer des stratégies spécifiques contre ${adversaryAnalysis.name}`);
+            }
+
+            return program;
+        }
+
+        function displayTrainingProgram(program, teamAnalysis, adversaryAnalysis) {
+            let html = `
+                <div class="info-section">
+                    <h4>Analyse de l'Équipe</h4>
+                    <p><strong>Joueurs disponibles :</strong> ${teamAnalysis.availablePlayers}/${teamAnalysis.playerCount}</p>
+                    <p><strong>Points forts identifiés :</strong> ${teamAnalysis.strengths.length}</p>
+                    <p><strong>Points à améliorer :</strong> ${teamAnalysis.weaknesses.length}</p>
+                </div>
+            `;
+
+            if (adversaryAnalysis) {
+                html += `
+                    <div class="info-section">
+                        <h4>Analyse de l'Adversaire: ${adversaryAnalysis.name}</h4>
+                        <p><strong>Formation :</strong> ${adversaryAnalysis.formation}</p>
+                        <p><strong>Forces :</strong> ${adversaryAnalysis.strengths.join(', ')}</p>
+                        <p><strong>Faiblesses :</strong> ${adversaryAnalysis.weaknesses.join(', ')}</p>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="info-section">
+                    <h4>Recommandations</h4>
+                    <ul>
+                        ${program.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+
+            html += '<h4>Programme Hebdomadaire</h4>';
+
+            program.days.forEach(day => {
+                html += `
+                    <div class="training-day">
+                        <div class="training-day-header">
+                            ${new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </div>
+                        <div class="training-day-content">
+                            ${day.sessions.map(session => `
+                                <div class="training-session">
+                                    <h5>${session.time} - ${session.type} (${session.duration} min)</h5>
+                                    <p>${session.description}</p>
+                                    <div>
+                                        ${session.focus.map(focus => `<span class="training-focus focus-${focus}">${focus}</span>`).join('')}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('aiProgramContent').innerHTML = html;
+        }
+
+        // ============ CALENDRIER ANNUEL (NOUVEAU) ============
+        let currentCalendarDate = new Date();
+
+        function initializeCalendarPage() {
+            // Remplir les champs de date avec des valeurs par défaut
+            const today = new Date();
+            const seasonStart = new Date(today.getFullYear(), 7, 1); // 1er août de cette année
+            const seasonEnd = new Date(today.getFullYear() + 1, 5, 30); // 30 juin de l'année suivante
+            
+            document.getElementById('seasonStartDate').value = formatDateForInput(seasonStart);
+            document.getElementById('seasonEndDate').value = formatDateForInput(seasonEnd);
+            
+            // Si un calendrier existe déjà, l'afficher
+            if (appState.annualCalendar.seasonStart) {
+                currentCalendarDate = new Date(appState.annualCalendar.seasonStart);
+                document.getElementById('calendarContainer').style.display = 'block';
+                renderCalendar();
+                displayCalendarEvents();
+            }
+        }
+
+        function generateAnnualCalendar() {
+            const seasonStart = document.getElementById('seasonStartDate').value;
+            const seasonEnd = document.getElementById('seasonEndDate').value;
+            const trainingDaysPerWeek = parseInt(document.getElementById('trainingDays').value);
+            const matchDay = parseInt(document.getElementById('matchDay').value);
+
+            if (!seasonStart || !seasonEnd) {
+                showMessage('', 'Veuillez sélectionner les dates de début et de fin de saison.', 'error');
+                return;
+            }
+
+            // Mettre à jour la configuration du calendrier
+            appState.annualCalendar.seasonStart = seasonStart;
+            appState.annualCalendar.seasonEnd = seasonEnd;
+            appState.annualCalendar.trainingDaysPerWeek = trainingDaysPerWeek;
+            appState.annualCalendar.matchDay = matchDay;
+
+            // Générer les événements de la saison
+            generateSeasonEvents();
+
+            // Afficher le calendrier
+            currentCalendarDate = new Date(seasonStart);
+            document.getElementById('calendarContainer').style.display = 'block';
+            renderCalendar();
+            displayCalendarEvents();
+
+            saveDataToLocalStorage();
+            showMessage('', 'Calendrier généré avec succès!', 'success');
+        }
+
+        function generateSeasonEvents() {
+            const startDate = new Date(appState.annualCalendar.seasonStart);
+            const endDate = new Date(appState.annualCalendar.seasonEnd);
+            const trainingDaysPerWeek = appState.annualCalendar.trainingDaysPerWeek;
+            const matchDay = appState.annualCalendar.matchDay;
+
+            // Réinitialiser les événements
+            appState.annualCalendar.events = {};
+
+            let currentDate = new Date(startDate);
+            
+            // Générer les événements pour chaque semaine
+            while (currentDate <= endDate) {
+                const weekStart = new Date(currentDate);
+                
+                // Déterminer les jours d'entraînement (en évitant le jour de match)
+                const trainingDays = [];
+                let trainingDayCount = 0;
+                
+                for (let i = 0; i < 7 && trainingDayCount < trainingDaysPerWeek; i++) {
+                    const day = new Date(weekStart);
+                    day.setDate(day.getDate() + i);
+                    
+                    // Ne pas programmer d'entraînement le jour du match
+                    if (day.getDay() !== matchDay) {
+                        trainingDays.push(new Date(day));
+                        trainingDayCount++;
+                    }
+                }
+                
+                // Ajouter les entraînements
+                trainingDays.forEach(day => {
+                    const dateKey = formatDate(day);
+                    if (!appState.annualCalendar.events[dateKey]) {
+                        appState.annualCalendar.events[dateKey] = [];
+                    }
+                    appState.annualCalendar.events[dateKey].push({
+                        type: 'training',
+                        title: 'Entraînement'
+                    });
+                });
+                
+                // Ajouter le match (tous les samedis par défaut)
+                const matchDate = new Date(weekStart);
+                matchDate.setDate(matchDate.getDate() + (matchDay - weekStart.getDay() + 7) % 7);
+                
+                if (matchDate <= endDate) {
+                    const matchDateKey = formatDate(matchDate);
+                    if (!appState.annualCalendar.events[matchDateKey]) {
+                        appState.annualCalendar.events[matchDateKey] = [];
+                    }
+                    appState.annualCalendar.events[matchDateKey].push({
+                        type: 'match',
+                        title: 'Match'
+                    });
+                    
+                    // Ajouter une séance de récupération le lendemain du match
+                    const recoveryDate = new Date(matchDate);
+                    recoveryDate.setDate(recoveryDate.getDate() + 1);
+                    
+                    if (recoveryDate <= endDate) {
+                        const recoveryDateKey = formatDate(recoveryDate);
+                        if (!appState.annualCalendar.events[recoveryDateKey]) {
+                            appState.annualCalendar.events[recoveryDateKey] = [];
+                        }
+                        appState.annualCalendar.events[recoveryDateKey].push({
+                            type: 'recovery',
+                            title: 'Récupération'
+                        });
+                    }
+                }
+                
+                // Passer à la semaine suivante
+                currentDate.setDate(currentDate.getDate() + 7);
+            }
+        }
+
+        function changeCalendarMonth(direction) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+
+            // En-têtes des jours de la semaine
+            const dayHeaders = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+            dayHeaders.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'calendar-day-header';
+                dayHeader.textContent = day;
+                calendarGrid.appendChild(dayHeader);
+            });
+
+            // Titre du mois et de l'année
+            const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            document.getElementById('calendarMonthYear').textContent = 
+                `${monthNames[currentCalendarDate.getMonth()]} ${currentCalendarDate.getFullYear()}`;
+
+            // Premier jour du mois
+            const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
+            // Dernier jour du mois
+            const lastDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0);
+            
+            // Jour de la semaine du premier jour (0 = dimanche, 1 = lundi, etc.)
+            const firstDayOfWeek = firstDay.getDay();
+            
+            // Cases vides avant le premier jour du mois
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day empty';
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            // Jours du mois
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), day);
+                const dateKey = formatDate(date);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                const dateElement = document.createElement('div');
+                dateElement.className = 'calendar-date';
+                dateElement.textContent = day;
+                dayElement.appendChild(dateElement);
+                
+                // Afficher les événements pour cette date
+                if (appState.annualCalendar.events[dateKey]) {
+                    appState.annualCalendar.events[dateKey].forEach(event => {
+                        const eventElement = document.createElement('div');
+                        eventElement.className = `calendar-event event-${event.type}`;
+                        eventElement.textContent = event.title;
+                        dayElement.appendChild(eventElement);
+                    });
+                }
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+
+        function displayCalendarEvents() {
+            const eventsList = document.getElementById('calendarEventsList');
+            eventsList.innerHTML = '';
+
+            const monthStart = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
+            const monthEnd = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0);
+
+            let hasEvents = false;
+
+            for (let date = new Date(monthStart); date <= monthEnd; date.setDate(date.getDate() + 1)) {
+                const dateKey = formatDate(date);
+                if (appState.annualCalendar.events[dateKey]) {
+                    hasEvents = true;
+                    
+                    const dateEvents = appState.annualCalendar.events[dateKey];
+                    const eventDate = new Date(date);
+                    
+                    dateEvents.forEach(event => {
+                        const eventElement = document.createElement('div');
+                        eventElement.className = 'training-plan-card';
+                        
+                        let eventTypeText = '';
+                        let eventColor = '';
+                        
+                        switch(event.type) {
+                            case 'training':
+                                eventTypeText = 'Entraînement';
+                                eventColor = 'var(--secondary-color)';
+                                break;
+                            case 'match':
+                                eventTypeText = 'Match';
+                                eventColor = 'var(--danger-color)';
+                                break;
+                            case 'recovery':
+                                eventTypeText = 'Récupération';
+                                eventColor = 'var(--accent-color)';
+                                break;
+                        }
+                        
+                        eventElement.innerHTML = `
+                            <h4 style="color: ${eventColor}">${eventTypeText} - ${eventDate.toLocaleDateString('fr-FR')}</h4>
+                            <p>${event.title}</p>
+                        `;
+                        
+                        eventsList.appendChild(eventElement);
+                    });
+                }
+            }
+
+            if (!hasEvents) {
+                eventsList.innerHTML = '<p class="text-center">Aucun événement programmé pour ce mois.</p>';
+            }
+        }
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // ============ GUIDE D'INFORMATION ============
+        function switchInfoTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ============ UTILITAIRES ============
+        function showMessage(elementId, message, type) {
+            if (elementId) {
+                const element = document.getElementById(elementId);
+                element.textContent = message;
+                element.className = `alert alert-${type}`;
+                element.style.display = 'block';
+            } else {
+                alert(message);
+            }
+        }
+
+        function updateDashboardStats() {
+            if (!appState.currentUser) return;
+
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            if (!profile || !profile.players) return;
+
+            const players = Object.values(profile.players);
+            document.getElementById('playerCount').textContent = players.length;
+            document.getElementById('sessionCount').textContent = appState.trainingSchedules.length;
+
+            // Calcul du taux de présence (basé sur les joueurs actifs)
+            let activeCount = 0;
+            let totalCount = 0;
+            Object.keys(appState.attendance).forEach(key => {
+                const attendanceData = appState.attendance[key];
+                if (attendanceData && attendanceData.status === 'actif') activeCount++;
+                totalCount++;
+            });
+            const attendanceRate = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
+            document.getElementById('attendanceRate').textContent = attendanceRate + '%';
+
+            // Calcul de la performance moyenne
+            let totalRating = 0;
+            let ratingCount = 0;
+            players.forEach(player => {
+                Object.values(player.ratings).forEach(category => {
+                    Object.values(category).forEach(value => {
+                        totalRating += value;
+                        ratingCount++;
+                    });
+                });
+            });
+            const avgPerformance = ratingCount > 0 ? (totalRating / ratingCount).toFixed(1) : 0;
+            document.getElementById('avgPerformance').textContent = avgPerformance + '/20';
+        }
+
+        function generateAnalysisReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(20);
+            doc.text('Rapport d\'Analyse de Performance', 20, 20);
+
+            doc.setFontSize(12);
+            doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 20, 35);
+
+            let yPosition = 50;
+            const user = appState.users[appState.currentUser];
+            const profile = user.profiles[appState.currentProfile];
+            const players = Object.values(profile.players);
+
+            doc.setFontSize(14);
+            doc.text('Statistiques de l\'Équipe', 20, yPosition);
+            yPosition += 10;
+
+            doc.setFontSize(11);
+            doc.text(`Nombre de joueurs: ${players.length}`, 20, yPosition);
+            yPosition += 7;
+            doc.text(`Séances programmées: ${appState.trainingSchedules.length}`, 20, yPosition);
+            yPosition += 7;
+
+            let activeCount = 0;
+            let totalCount = 0;
+            Object.keys(appState.attendance).forEach(key => {
+                const attendanceData = appState.attendance[key];
+                if (attendanceData && attendanceData.status === 'actif') activeCount++;
+                totalCount++;
+            });
+            const attendanceRate = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
+            doc.text(`Taux de présence: ${attendanceRate}%`, 20, yPosition);
+            yPosition += 15;
+
+            doc.setFontSize(14);
+            doc.text('Performance des Joueurs', 20, yPosition);
+            yPosition += 10;
+
+            const tableData = players.map(p => [
+                p.name,
+                p.position,
+                p.age,
+                ((p.ratings.technical.passing + p.ratings.technical.shooting + p.ratings.technical.dribbling + p.ratings.technical.ballControl) / 4).toFixed(1)
+            ]);
+
+            doc.autoTable({
+                head: [['Joueur', 'Position', 'Âge', 'Moyenne Technique']],
+                body: tableData,
+                startY: yPosition
+            });
+
+            doc.save('rapport_analyse_performance.pdf');
+        }
+
+        // ============ STOCKAGE LOCAL ============
+        function saveDataToLocalStorage() {
+            localStorage.setItem('appState', JSON.stringify(appState));
+        }
+
+        function loadDataFromLocalStorage() {
+            const saved = localStorage.getItem('appState');
+            if (saved) {
+                const loaded = JSON.parse(saved);
+                Object.assign(appState, loaded);
+            }
+
+            // Ajouter des données par défaut si vide
+            if (Object.keys(appState.users).length === 0) {
+                appState.users = {
+                    'demo@coach.fr': {
+                        name: 'Coach Démo',
+                        password: 'demo123',
+                        profiles: {
+                            'Profil Principal': {
+                                players: {
+                                    'player_1': {
+                                        id: 'player_1',
+                                        name: 'Jean Dupont',
+                                        age: 24,
+                                        height: 182,
+                                        weight: 78,
+                                        position: 'Attaquant',
+                                        ratings: {
+                                            technical: { passing: 14, shooting: 16, dribbling: 15, ballControl: 14 },
+                                            physical: { speed: 17, strength: 13, endurance: 16, agility: 15 },
+                                            tactical: { positioning: 13, decisionMaking: 14, teamwork: 15, vision: 14 },
+                                            mental: { concentration: 14, confidence: 15, composure: 13, workRate: 16 }
+                                        }
+                                    },
+                                    'player_2': {
+                                        id: 'player_2',
+                                        name: 'Pierre Martin',
+                                        age: 22,
+                                        height: 175,
+                                        weight: 72,
+                                        position: 'Milieu',
+                                        ratings: {
+                                            technical: { passing: 15, shooting: 11, dribbling: 14, ballControl: 15 },
+                                            physical: { speed: 16, strength: 11, endurance: 17, agility: 15 },
+                                            tactical: { positioning: 14, decisionMaking: 15, teamwork: 16, vision: 15 },
+                                            mental: { concentration: 15, confidence: 14, composure: 14, workRate: 15 }
+                                        }
+                                    },
+                                    'player_3': {
+                                        id: 'player_3',
+                                        name: 'Marc Leblanc',
+                                        age: 28,
+                                        height: 188,
+                                        weight: 82,
+                                        position: 'Défenseur',
+                                        ratings: {
+                                            technical: { passing: 12, shooting: 8, dribbling: 10, ballControl: 12 },
+                                            physical: { speed: 14, strength: 17, endurance: 16, agility: 12 },
+                                            tactical: { positioning: 16, decisionMaking: 15, teamwork: 16, vision: 13 },
+                                            mental: { concentration: 16, confidence: 15, composure: 15, workRate: 16 }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+                appState.trainingSchedules = [
+                    {
+                        id: 'session_1',
+                        date: new Date().toISOString().split('T')[0],
+                        time: '10:00',
+                        duration: 90,
+                        type: 'mixte',
+                        description: 'Entraînement complet avec focus sur la technique et la tactique'
+                    }
+                ];
+                saveDataToLocalStorage();
+            }
+        }
+
+        // ============ INITIALISATION DE L'APPLICATION ============
+        function initializeInjuryPage() {
+            populateInjuryPlayerSelect();
+            displayInjuries();
+        }
+
+        window.addEventListener("load", initializeApp);
+    </script>
+</body>
+</html>
